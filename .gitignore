@@ -21,3 +21,6 @@ target/
 
 ### VS Code ###
 .vscode/
+
+### openproject mcp server ###
+application-local.properties

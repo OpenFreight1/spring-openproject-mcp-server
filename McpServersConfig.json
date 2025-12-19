@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openproject-mcp-server": {
+      "url": "http://${openproject-mcp-host}:8080/sse",
+      "headers": {
+        "X-OpenProject-Base-Url": "https://<open-project-uri>",
+        "Authorization:": "Bearer <token-for-mcp-user>"
+      }
+    }
+  }
+}
