@@ -23,7 +23,7 @@ public class WorkPackageCreateDto {
 
   @JsonProperty(required = true)
   @JsonPropertyDescription("The subject or title of the work package.")
-  @NotBlank
+  @NotBlank(groups = OnCreate.class)
   private String subject;
 
   @JsonProperty
@@ -32,8 +32,7 @@ public class WorkPackageCreateDto {
 
   @JsonProperty(required = true)
   @JsonPropertyDescription("The numerical ID of the work package type e.g., 5 for 'Epic', 6 for 'User story'. Use tool 'list_project_types' to retrieve available types and IDs for the project.")
-  @NotNull
-  @Positive
+  @NotNull(groups = OnCreate.class)
   private Integer typeId;
 
   @JsonProperty
@@ -56,4 +55,8 @@ public class WorkPackageCreateDto {
   @JsonPropertyDescription("Story points of the work package (if type is 'User story').")
   @Positive
   private Integer storyPoints;
+
+  public interface OnCreate {
+    // constraint group constraints in subclasses
+  }
 }
