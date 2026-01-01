@@ -35,7 +35,7 @@ docker run --rm \
   --output-file /work/application.spdx.json \
   --output-format spdxjson
   
-PKG_VERSION="dev" docker build \
+PKG_VERSION="dev" && docker build \
  -f docker/Dockerfile \
  -t spring-openproject-mcp-server:${PKG_VERSION} \
  --attest type=sbom,generator=docker/scout-sbom-indexer:latest \
