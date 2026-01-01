@@ -34,13 +34,21 @@ docker run --rm \
   --input-file /work/application.cdx.json \
   --output-file /work/application.spdx.json \
   --output-format spdxjson
-docker build -f docker/Dockerfile \
-  --attest type=sbom,generator=docker/scout-sbom-indexer:latest \
-  -t spring-openproject-mcp-server:latest .
-```
+  
+PKG_VERSION="dev" docker build \
+ -f docker/Dockerfile \
+ -t spring-openproject-mcp-server:${PKG_VERSION} \
+ --attest type=sbom,generator=docker/scout-sbom-indexer:latest \
+ --label org.opencontainers.image.build-date=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+ --label org.opencontainers.image.revision=$(git rev-parse HEAD) \
+ --label org.opencontainers.image.version=${PKG_VERSION} \
+ --platform linux/amd64,linux/arm64 \
+ . 
+ ```
+
 ### run
 ```bash
-docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProjexct} --tmpfs /tmp spring-openproject-mcp-server:latest
+docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProjexct} --tmpfs /tmp spring-openproject-mcp-server
 ```
 ```json
 {
@@ -69,10 +77,12 @@ mvn test -Dopenproject.container.tag=16 -Dopenproject.container.port=18080
 ```
 Mind to remove volumes between tests 
 
+
 ## TODO
 - MCP OpenProject with OTEL
 - use results after patch json
 - add kubernetes deployment+service (helm?)
+
 
 ## SSE vs Streamable
 
@@ -88,11 +98,17 @@ Spring creates one MCP server bean with one transport:
 
 Because the transport defines the wiring, endpoints, and message routing, Spring cannot bind two protocols simultaneously.
 
+
 ## FAQ
+
 - Why wasn't a generated OpenAPI client used, but JSONNode value mapping with MapStruct?
   - The first approach was using a generated OpenAPI client, but there were many issues:
     - code generation with org.openapitools:openapi-generator-maven-plugin wasn't totally clean and needed lots of manual corrections.
     - client is very strict, and would fail minimal spec changes
     - Spec lacks values, e.g. 'storyPoints' and manually enhancing generated code is not applicable
     - compatibility to wider range of versions can better be realized with direct value mapping and integration tests against multiple versions of OpenProject
-  
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

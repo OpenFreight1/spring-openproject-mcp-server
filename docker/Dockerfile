@@ -1,4 +1,10 @@
-FROM docker.io/eclipse-temurin:25.0.1_8-jre-alpine-3.23
+ARG TAG="25.0.1_8-jre-alpine-3.23"
+
+FROM docker.io/eclipse-temurin:${TAG}
+
+LABEL org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.source="https://github.com/tmskln" \
+      org.opencontainers.image.description="MCP Server for OpenProject API (workpackages)"
 
 WORKDIR /app
 
@@ -21,3 +27,6 @@ HEALTHCHECK --interval=5m --timeout=3s --start-period=20s --retries=3 \
 
 # Command to run the application
 ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=prod -jar /app/app.jar"]
+
+####################################
+# --platform linux/amd64,linux/arm64

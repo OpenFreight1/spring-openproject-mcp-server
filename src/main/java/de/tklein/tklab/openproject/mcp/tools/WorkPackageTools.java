@@ -22,6 +22,10 @@ import org.springaicommunity.mcp.annotation.McpTool.McpAnnotations;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+/*
+ * Copyright (c) 2025 Thomas Klein
+ * SPDX-License-Identifier: MIT
+ */
 @Log4j2
 @Validated
 @Component
