@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +21,6 @@ public class WorkPackageUpdateDto extends WorkPackageCreateDto {
   @JsonProperty(required = true)
   @JsonPropertyDescription("The latest 'lockVersion' property from the work-package to update.")
   @NotNull
-  @Positive
   private Integer lockVersion;
 
   @JsonProperty // override from superclass

@@ -50,7 +50,7 @@ public class WorkPackageDto {
   private LocalDate dueDate;
 
   @JsonProperty
-  @JsonPropertyDescription("Estimated time for the work package in ISO 8601 duration format (e.g., 'PT5H').")
+  @JsonPropertyDescription("Estimated time for the work package in ISO 8601 duration format (e.g., 'PT5H' for 5 hours).")
   private String estimatedTime;
 
   @JsonProperty

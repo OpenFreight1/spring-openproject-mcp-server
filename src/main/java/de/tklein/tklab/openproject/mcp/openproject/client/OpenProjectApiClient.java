@@ -31,6 +31,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
+/*
+ * Copyright (c) 2025 Thomas Klein
+ * SPDX-License-Identifier: MIT
+ */
 @Service
 @Log4j2
 @RequiredArgsConstructor

@@ -60,7 +60,9 @@ public class SecurityConfig {
   SecurityFilterChain actuatorSecurity(HttpSecurity http) throws Exception {
     http
         .securityMatcher("/actuator/**")
-        .authorizeHttpRequests(reg -> reg.anyRequest().hasRole("ACTUATOR_ADMIN"))
+        .authorizeHttpRequests(reg -> reg
+            .requestMatchers("/actuator/health", "/actuator/health/*").permitAll()
+            .anyRequest().hasRole("ACTUATOR_ADMIN"))
         .httpBasic(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable);
     return http.build();
