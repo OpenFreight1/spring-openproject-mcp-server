@@ -3,7 +3,7 @@ ARG TAG="25.0.1_8-jre-alpine-3.23"
 FROM docker.io/eclipse-temurin:${TAG}
 
 LABEL org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.source="https://github.com/tmskln" \
+      org.opencontainers.image.source="https://github.com/tmskln/spring-openproject-mcp-server.git" \
       org.opencontainers.image.description="MCP Server for OpenProject API (workpackages)"
 
 WORKDIR /app
