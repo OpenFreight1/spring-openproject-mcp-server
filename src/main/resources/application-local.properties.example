@@ -1,0 +1,2 @@
+openproject.url=https://pro.t-klein.de
+logging.level.de.tklein.openproject.mcp.openproject.client=TRACE

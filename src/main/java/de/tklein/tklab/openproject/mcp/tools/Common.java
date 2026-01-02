@@ -1,0 +1,20 @@
+package de.tklein.tklab.openproject.mcp.tools;
+
+import io.modelcontextprotocol.spec.McpSchema;
+import lombok.extern.log4j.Log4j2;
+import org.springaicommunity.mcp.annotation.McpLogging;
+import org.springframework.stereotype.Component;
+
+@Log4j2
+@Component
+public class Common {
+
+  /*
+   * Loging is only for MCP clients, we have only a MCP server here!
+   */
+  @McpLogging(clients = "openproject-mcp-server")
+  public void handleLoggingMessage(McpSchema.LoggingMessageNotification notification) {
+    log.info("Received log: {} - {}", notification.level(), notification.data());
+  }
+
+}
