@@ -25,6 +25,8 @@ Tested against OpenProject 14,15,16.6,17.2
 
 ## Docker
 
+Find the latest image at [https://hub.docker.com/r/tmskln/spring-openproject-mcp-server](https://hub.docker.com/r/tmskln/spring-openproject-mcp-server)
+
 ### build
 ```bash
 # convert java SBOM to optimized OCI format
