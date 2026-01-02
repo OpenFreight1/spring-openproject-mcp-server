@@ -25,6 +25,8 @@ Tested against OpenProject 14,15,16,17-rc
 
 ## Docker
 
+Find the latest image at [https://hub.docker.com/r/tmskln/spring-openproject-mcp-server](https://hub.docker.com/r/tmskln/spring-openproject-mcp-server)
+
 ### build
 ```bash
 docker run --rm \
