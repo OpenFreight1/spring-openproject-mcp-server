@@ -2,10 +2,9 @@ package de.tklein.tklab.openproject.mcp.mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
-import org.mapstruct.Mapper;
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import org.mapstruct.Mapper;
 
 @Mapper
 public interface WorkPackageMapper {

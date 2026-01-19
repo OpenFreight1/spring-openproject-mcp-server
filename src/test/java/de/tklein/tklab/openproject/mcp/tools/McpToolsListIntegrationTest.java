@@ -134,9 +134,10 @@ class McpToolsListIntegrationTest {
     DocumentContext ctx = JsonPath.parse(json);
 
     List<String> names = ctx.read("$.result.tools[*].name");
-    assertThat(names).isNotNull().isNotEmpty();
-    assertThat(names).contains("relationAdd");
-    assertThat(names).allSatisfy(n -> assertThat(n).isNotBlank());
+    assertThat(names).isNotNull()
+        .isNotEmpty()
+        .contains("relationAdd")
+        .allSatisfy(n -> assertThat(n).isNotBlank());
   }
 
   private JsonNode findToolByName(JsonNode toolsArray, String name) {

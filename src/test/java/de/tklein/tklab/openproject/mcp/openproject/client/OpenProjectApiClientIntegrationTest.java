@@ -158,7 +158,7 @@ class OpenProjectApiClientIntegrationTest {
       if (composeShutdown) {
         dockerCompose("down", "-v");
       }
-    } catch (Exception ignored) {
+    } catch (Exception _) {
       // best effort cleanup
     }
   }
@@ -223,8 +223,8 @@ class OpenProjectApiClientIntegrationTest {
   @Test
   void priorityList_returnsNonEmptyList_withIdsAndNames() {
     List<PriorityDto> priorities = client.priorityList();
-    assertThat(priorities).isNotNull().isNotEmpty();
-    assertThat(priorities)
+    assertThat(priorities).isNotNull()
+        .isNotEmpty()
         .allSatisfy(p -> {
           assertThat(p.getId()).isNotNull();
           assertThat(p.getName()).isNotBlank();
@@ -234,8 +234,8 @@ class OpenProjectApiClientIntegrationTest {
   @Test
   void typeList_forDemoProject_returnsNonEmptyList_withIdsAndNames() {
     List<TypeDto> types = client.typeList(demoProjectId);
-    assertThat(types).isNotNull().isNotEmpty();
-    assertThat(types)
+    assertThat(types).isNotNull()
+        .isNotEmpty()
         .allSatisfy(t -> {
           assertThat(t.getId()).isNotNull();
           assertThat(t.getName()).isNotBlank();
@@ -251,8 +251,7 @@ class OpenProjectApiClientIntegrationTest {
 
     // --- List work packages (should include at least one of them)
     List<WorkPackageDto> wps = client.workPackageList(demoProjectId);
-    assertThat(wps).isNotNull();
-    assertThat(wps).extracting(WorkPackageDto::getId).contains(wpA);
+    assertThat(wps).isNotNull().extracting(WorkPackageDto::getId).contains(wpA);
 
     // --- Show work package
     WorkPackageDto shown = client.workPackageShow(wpA);
@@ -279,8 +278,7 @@ class OpenProjectApiClientIntegrationTest {
     byte[] content = "hello from integration test".getBytes(StandardCharsets.UTF_8);
     Integer attachmentId = client.workPackageUploadAttachment(wpA, "integration-test.txt", content,
         "text/plain");
-    assertThat(attachmentId).isNotNull();
-    assertThat(attachmentId).isGreaterThan(0);
+    assertThat(attachmentId).isNotNull().isGreaterThan(0);
 
     // --- Add relation A -> B
     boolean relAdded = client.relationAdd(wpA, wpB, "test relation", RelationType.relates);

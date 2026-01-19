@@ -12,6 +12,7 @@ public class HttpHeaderOpenProjectConnectionResolver implements OpenProjectConne
 
   public static final String HEADER_BASE_URL = "X-OpenProject-Base-Url";
   public static final String HEADER_AUTHORIZATION = "Authorization";
+  public static final String BEARER = "Bearer ";
 
   private final ObjectProvider<HttpServletRequest> requestProvider;
   private final URI configuredBaseUrl;
@@ -50,8 +51,8 @@ public class HttpHeaderOpenProjectConnectionResolver implements OpenProjectConne
       return Optional.empty();
     }
     String s = authorizationHeader.trim();
-    if (s.regionMatches(true, 0, "Bearer ", 0, "Bearer ".length())) {
-      String token = s.substring("Bearer ".length()).trim();
+    if (s.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
+      String token = s.substring(BEARER.length()).trim();
       return token.isBlank() ? Optional.empty() : Optional.of(token);
     }
     return Optional.empty();

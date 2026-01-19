@@ -79,7 +79,9 @@ class McpSecurityIntegrationTest {
   @CsvSource(value = {"correctToken,404", "wrongToken,401", ",401", "'',401"})
   void mcpToolsRequestWithoutInitializeAuth(String token, int expectedStatus) throws Exception {
     var headers = makeAuthHeader(token);
-    McpToolsHelper.callToolsListRequest(port, "fakeSessionId", headers, expectedStatus);
+    var result = McpToolsHelper.callToolsListRequest(port, "fakeSessionId", headers,
+        expectedStatus);
+    assertThat(result).isNull();
   }
 
   @ParameterizedTest
@@ -97,7 +99,8 @@ class McpSecurityIntegrationTest {
   @CsvSource(value = {"correctToken,404", "wrongToken,401", ",401", "'',401"})
   void mcpPingRequestWithoutInitializeAuth(String token, int expectedStatus) throws Exception {
     var headers = makeAuthHeader(token);
-    McpToolsHelper.callPingRequest(port, "fakeSessionId", headers, expectedStatus);
+    var result = McpToolsHelper.callPingRequest(port, "fakeSessionId", headers, expectedStatus);
+    assertThat(result).isNull();
   }
 
   @ParameterizedTest
@@ -115,7 +118,9 @@ class McpSecurityIntegrationTest {
   @CsvSource(value = {"correctToken,404", "wrongToken,401", ",401", "'',401"})
   void mcpPromptsRequestWithoutInitializeAuth(String token, int expectedStatus) throws Exception {
     var headers = makeAuthHeader(token);
-    McpToolsHelper.callPromptsListRequest(port, "fakeSessionId", headers, expectedStatus);
+    var result = McpToolsHelper.callPromptsListRequest(port, "fakeSessionId", headers,
+        expectedStatus);
+    assertThat(result).isNull();
   }
 
   @ParameterizedTest
