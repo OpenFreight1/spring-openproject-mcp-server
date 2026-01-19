@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -21,6 +20,7 @@ import org.springframework.web.client.RestClient;
 @RequiredArgsConstructor
 public class OpenProjectRestOperations {
 
+  public static final String APPLICATION_HAL_JSON = "application/hal+json";
   private final OpenProjectRestClientFactory restClientFactory;
 
   private RestClient op() {
@@ -30,7 +30,7 @@ public class OpenProjectRestOperations {
   public JsonNode getJson(String uriTemplate, Object... uriVariables) {
     return op().get()
         .uri(uriTemplate, uriVariables)
-        .accept(MediaType.parseMediaType("application/hal+json"))
+        .accept(MediaType.parseMediaType(APPLICATION_HAL_JSON))
         .retrieve()
         .body(JsonNode.class);
   }
@@ -39,7 +39,7 @@ public class OpenProjectRestOperations {
     return op().post()
         .uri(uriTemplate, uriVariables)
         .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.parseMediaType("application/hal+json"))
+        .accept(MediaType.parseMediaType(APPLICATION_HAL_JSON))
         .body(jsonBody)
         .retrieve()
         .body(JsonNode.class);
@@ -49,7 +49,7 @@ public class OpenProjectRestOperations {
     return op().patch()
         .uri(uriTemplate, uriVariables)
         .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.parseMediaType("application/hal+json"))
+        .accept(MediaType.parseMediaType(APPLICATION_HAL_JSON))
         .body(jsonBody)
         .retrieve()
         .body(JsonNode.class);
@@ -58,12 +58,13 @@ public class OpenProjectRestOperations {
   public void delete(String uriTemplate, Object... uriVariables) {
     op().delete()
         .uri(uriTemplate, uriVariables)
-        .accept(MediaType.parseMediaType("application/hal+json"))
+        .accept(MediaType.parseMediaType(APPLICATION_HAL_JSON))
         .retrieve()
         .toBodilessEntity();
   }
 
-  public JsonNode postMultipart(String uriTemplate, MultiValueMap<String, Object> body, Object... uriVariables) {
+  public JsonNode postMultipart(String uriTemplate, MultiValueMap<String, Object> body,
+      Object... uriVariables) {
     return op().post()
         .uri(uriTemplate, uriVariables)
         .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -72,7 +73,8 @@ public class OpenProjectRestOperations {
         .body(JsonNode.class);
   }
 
-  public MultiValueMap<String, Object> buildMultipartAttachmentBody(String fileName, byte[] fileContent, String fileContentType) {
+  public MultiValueMap<String, Object> buildMultipartAttachmentBody(String fileName,
+      byte[] fileContent, String fileContentType) {
     var metadataJson = Map.of("fileName", fileName);
     var metadataHeaders = new HttpHeaders();
     metadataHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -105,6 +107,6 @@ public class OpenProjectRestOperations {
     }
     return StreamSupport.stream(elements.spliterator(), false)
         .map(mapper)
-        .collect(Collectors.toList());
+        .toList();
   }
 }

@@ -6,12 +6,12 @@ The user's' OpenProject API token is used for authentication (not stored in the 
 
 
 ## Open project compatibility
-Tested against OpenProject 14,15,16,17-rc
+Tested against OpenProject 14,15,16.6,17.2
 
 
 ## Get started (using LM Studio)
 1. Launch the Docker container
-  `docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProjexct} --tmpfs /tmp spring-openproject-mcp-server:latest`
+  `docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProject} --tmpfs /tmp spring-openproject-mcp-server:latest`
 2. Run LM Studio and choose an appropriate model for your project domain. _qwen/qwen3-coder-30b_ works well to create technical epics and user stories. For simple translations and text refinements, a smaller model is enough.
 3. Configure LM Studio's `mcp.json` file below *"mcpServers":{...}* and set the API token for the project to use (see below)
 4. If you see *"mcp/openproject-mcp"* on the right side, below Integrations start prompting.
@@ -29,6 +29,7 @@ Find the latest image at [https://hub.docker.com/r/tmskln/spring-openproject-mcp
 
 ### build
 ```bash
+# convert java SBOM to optimized OCI format
 docker run --rm \
   -v "./target/classes/META-INF/sbom:/work"  --platform linux/amd64 \
   cyclonedx/cyclonedx-cli \
@@ -50,7 +51,7 @@ PKG_VERSION="dev" && docker build \
 
 ### run
 ```bash
-docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProjexct} --tmpfs /tmp spring-openproject-mcp-server
+docker run -d -p 0.0.0.0:8080:8080 -e OPENPROJECT_URL=https://${$yourOpenProject} --tmpfs /tmp spring-openproject-mcp-server
 ```
 ```json
 {
@@ -82,11 +83,11 @@ Mind to remove volumes between tests
 
 ## TODO
 - MCP OpenProject with OTEL
-- use results after patch json
+- use results after patch JSON
 - add kubernetes deployment+service (helm?)
 
 
-## SSE vs Streamable
+## SSE vs. Streamable
 
 spring.ai.mcp.server.protocol=SSE
 spring.ai.mcp.server.protocol=STREAMABLE
@@ -106,11 +107,11 @@ Because the transport defines the wiring, endpoints, and message routing, Spring
 - Why wasn't a generated OpenAPI client used, but JSONNode value mapping with MapStruct?
   - The first approach was using a generated OpenAPI client, but there were many issues:
     - code generation with org.openapitools:openapi-generator-maven-plugin wasn't totally clean and needed lots of manual corrections.
-    - client is very strict, and would fail minimal spec changes
+    - client is very strict and would fail minimal spec changes
     - Spec lacks values, e.g. 'storyPoints' and manually enhancing generated code is not applicable
-    - compatibility to wider range of versions can better be realized with direct value mapping and integration tests against multiple versions of OpenProject
+    - compatibility to a wider range of versions can better be realized with direct value mapping and integration tests against multiple versions of OpenProject
 
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.

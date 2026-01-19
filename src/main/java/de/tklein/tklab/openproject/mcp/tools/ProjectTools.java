@@ -29,7 +29,6 @@ public class ProjectTools {
     return openProjectApiClient.projectList();
   }
 
-  // TODO
   @McpPrompt(name = "openproject.project.summary", description = "Generates a summary of project information")
   public McpSchema.GetPromptResult generateProjectSummaryPrompt(
       @McpArg(description = "Project identifier") String projectId,

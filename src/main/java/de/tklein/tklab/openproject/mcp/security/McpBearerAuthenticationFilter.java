@@ -1,5 +1,6 @@
 package de.tklein.tklab.openproject.mcp.security;
 
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,8 +44,8 @@ public class McpBearerAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request,
-      HttpServletResponse response,
+      @Nonnull HttpServletRequest request,
+      @Nonnull HttpServletResponse response,
       FilterChain filterChain
   ) throws ServletException, IOException {
 
@@ -62,7 +63,7 @@ public class McpBearerAuthenticationFilter extends OncePerRequestFilter {
       securityContextRepository.saveContext(SecurityContextHolder.getContext(), request, response);
 
       filterChain.doFilter(request, response);
-    } catch (UnauthorizedException e) {
+    } catch (UnauthorizedException _) {
       SecurityContextHolder.clearContext();
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);

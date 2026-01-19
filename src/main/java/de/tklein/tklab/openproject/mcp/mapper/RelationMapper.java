@@ -50,7 +50,7 @@ public interface RelationMapper {
     Integer id = null;
     try {
       id = Integer.parseInt(part);
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException _) {
       // TODO log.warn("href='{}' hasn't expected prefix '{}'",href,OpenProjectApiClient.WP_PREFIX)
     }
     return id;

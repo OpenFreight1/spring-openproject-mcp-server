@@ -20,7 +20,8 @@ public class OpenProjectTemplateRenderer {
       Template template = freemarkerConfig.getTemplate(templateName);
       return FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
     } catch (IOException | TemplateException e) {
-      throw new RuntimeException("Failed to render template " + templateName + ": " + e.getMessage(), e);
+      throw new InternalError("Failed to render template " + templateName + ": " + e.getMessage(),
+          e);
     }
   }
 }

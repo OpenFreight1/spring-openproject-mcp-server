@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git Tag/Version (z.B. 0.2.0 oder v0.2.0)"
+        description: "Git Tag/Version (z.B. 0.2.0 or v0.2.0)"
         required: true
         type: string
 

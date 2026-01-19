@@ -4,10 +4,13 @@ import java.time.Duration;
 
 public class Utils {
 
+  private Utils() {
+  }
+
   public static void sleep(Duration duration) {
     try {
       Thread.sleep(duration);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException _) {
       Thread.currentThread().interrupt();
     }
   }
