@@ -1,7 +1,7 @@
 # OpenAPI v3 Openproject
 
 The first approach was to generate the API, which is obsolete now.
-Instead, JSONNode -> DTO using MapStruct Mappers and Freemarker templates for JSON payload are implemented.
+Instead, JSONNode → DTO using MapStruct Mappers and Freemarker templates for JSON payload are implemented.
 
 - code generation using maven Plugin ```org.openapitools.openapi-generator-maven-plugin```
     - creates package ```de.tklein.tklab.openproject.mcp.openproject.v3.*```
@@ -13,5 +13,5 @@ Instead, JSONNode -> DTO using MapStruct Mappers and Freemarker templates for JS
 - https://pro.t-klein.de/api/v3/spec.yml <-- use this
 
 ## Issues:
-- Spec needs to be fixed, see [spec_original.yml](spec_original.yml) vs [spec.yml](spec.yml)
+- Spec needs to be fixed, see [spec_original.yml](spec_original.yml) vs. [spec.yml](spec.yml)
   - needs ```<skipValidateSpec>true</skipValidateSpec>``` in pom

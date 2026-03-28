@@ -11,7 +11,7 @@ import org.mapstruct.Mapper;
 public interface UserMapper {
 
   /**
-   * Maps the OpenProject API root response (/api/v3) to a UserDto: _links.user.href  -> href
+   * Maps the OpenProject API root response (/api/v3) to a UserDto: _links.user.href -> href
    * _links.user.title -> name
    */
   default UserDto fromRoot(@Nonnull JsonNode root) {

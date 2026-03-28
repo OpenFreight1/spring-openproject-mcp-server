@@ -75,7 +75,7 @@ public class WorkPackageTools {
     byte[] bytes;
     try {
       bytes = Base64.getDecoder().decode(fileContentBase64);
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException _) {
       throw new IllegalArgumentException("'fileContentBase64' must be valid Base64");
     }
     return openProjectApiClient.workPackageUploadAttachment(workPackageId, fileName, bytes,

@@ -47,7 +47,7 @@ public interface WorkPackageMapper {
             dto.setUpdatedAt(OffsetDateTime.parse(updatedAt));
         }
 
-        // Typ-Name extrahieren: Für einzelne WP aus embedded, für Listen aus _links
+        // Typ-Name extract: Für einzelne WP aus embedded, für Listen aus _links
         JsonNode typeNode = node.path("_embedded").path("type");
         if (typeNode.isMissingNode()) {
             typeNode = node.path("_links").path("type");

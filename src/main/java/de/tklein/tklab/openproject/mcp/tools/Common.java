@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class Common {
 
   /*
-   * Loging is only for MCP clients, we have only a MCP server here!
+   * Logging is only for MCP clients, we have only an MCP server here!
    */
   @McpLogging(clients = "openproject-mcp-server")
   public void handleLoggingMessage(McpSchema.LoggingMessageNotification notification) {

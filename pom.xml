@@ -6,12 +6,12 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.8</version>
+    <version>3.5.13</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>de.tklein.tklab</groupId>
   <artifactId>spring-openproject-mcp-server</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <name>spring-openproject-mcp-server</name>
   <description>spring-openproject-mcp-server</description>
   <url/>
@@ -141,7 +141,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!--      Just to avoid warning: Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts-->
+      <!--      Just to avoid warning: Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath to avoid potential conflicts-->
       <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
