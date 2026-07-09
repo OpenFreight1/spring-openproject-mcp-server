@@ -107,6 +107,14 @@ public class OpenProjectApiClient {
     return true;
   }
 
+  public Integer workPackageAddComment(Integer workPackageId, String comment) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES, "comment", comment);
+    var jsonBody = templateRenderer.render("create_comment.ftl", model);
+    var result = restOperations.postJson("/api/v3/work_packages/{wpId}/activities", jsonBody,
+        workPackageId);
+    return result.findValue("id").asInt();
+  }
+
   public Integer workPackageUploadAttachment(Integer workPackageId, String fileName,
       byte[] fileContent, String fileContentType) {
     var body = restOperations.buildMultipartAttachmentBody(fileName, fileContent, fileContentType);
