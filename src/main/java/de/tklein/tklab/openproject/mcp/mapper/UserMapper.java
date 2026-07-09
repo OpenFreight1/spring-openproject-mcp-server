@@ -25,5 +25,17 @@ public interface UserMapper {
     dto.setId(Utils.hrefToId(href));
     return dto;
   }
+
+  /**
+   * Maps a User/Group/PlaceholderUser resource (top-level id/name, e.g. from /api/v3/users,
+   * /api/v3/groups, or a work package's watchers collection) to a UserDto.
+   */
+  default UserDto fromPrincipalResource(@Nonnull JsonNode node) {
+    UserDto dto = new UserDto();
+    dto.setId(node.path("id").isMissingNode() ? null : node.path("id").asInt());
+    dto.setName(trimToNull(node.path("name").asText(null)));
+    dto.setHref(trimToNull(node.path("_links").path("self").path("href").asText(null)));
+    return dto;
+  }
 }
 

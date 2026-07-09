@@ -1,8 +1,11 @@
 package de.tklein.tklab.openproject.mcp.tools;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.openproject.client.OpenProjectApiClient;
 import io.modelcontextprotocol.spec.McpSchema;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springaicommunity.mcp.annotation.McpArg;
@@ -27,6 +30,26 @@ public class ProjectTools {
       annotations = @McpAnnotations(readOnlyHint = true))
   public List<ProjectDto> projectList() {
     return openProjectApiClient.projectList();
+  }
+
+  @McpTool(description = "Fetches a project by id with its most relevant properties.",
+      annotations = @McpAnnotations(readOnlyHint = true))
+  public ProjectDto projectShow(@NotNull Integer projectId) {
+    return openProjectApiClient.projectShow(projectId);
+  }
+
+  @McpTool(description = "Creates a new project. The identifier is optional (OpenProject derives one from the name if omitted).")
+  public Integer projectCreate(@NotNull String name,
+      @JsonPropertyDescription("Optional unique string identifier (e.g. 'my-project'). Auto-derived from name if omitted.") @JsonProperty String identifier,
+      @JsonPropertyDescription("Optional project description.") @JsonProperty String description) {
+    return openProjectApiClient.projectCreate(name, identifier, description);
+  }
+
+  @McpTool(description = "Updates a project's name and/or description. Omitted fields are left unchanged.")
+  public boolean projectUpdate(@NotNull Integer projectId,
+      @JsonPropertyDescription("New project name, or omit to leave unchanged.") @JsonProperty String name,
+      @JsonPropertyDescription("New project description, or omit to leave unchanged.") @JsonProperty String description) {
+    return openProjectApiClient.projectUpdate(projectId, name, description);
   }
 
   @McpPrompt(name = "openproject.project.summary", description = "Generates a summary of project information")

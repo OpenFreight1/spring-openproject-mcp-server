@@ -19,4 +19,28 @@ class VersionToolsTest {
         () -> versionTools.versionList(null));
   }
 
+  @Test
+  void versionShow_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> versionTools.versionShow(null));
+  }
+
+  @Test
+  void versionCreate_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> versionTools.versionCreate(null, null, null, null, null));
+  }
+
+  @Test
+  void versionUpdate_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> versionTools.versionUpdate(null, null, null, null, null));
+  }
+
+  @Test
+  void versionDelete_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> versionTools.versionDelete(null));
+  }
+
 }

@@ -203,6 +203,72 @@ class WorkPackageToolsTest {
   }
 
   @Test
+  void searchWorkPackages_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.searchWorkPackages(null, null, null, null));
+  }
+
+  @Test
+  void workPackagesBulkCreate_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackagesBulkCreate(null, null));
+  }
+
+  @Test
+  void workPackagesBulkUpdate_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackagesBulkUpdate(null));
+  }
+
+  @Test
+  void workPackageAttachments_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageAttachments(null));
+  }
+
+  @Test
+  void attachmentDelete_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.attachmentDelete(null));
+  }
+
+  @Test
+  void workPackageWatchers_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageWatchers(null));
+  }
+
+  @Test
+  void workPackageAddWatcher_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageAddWatcher(null, null));
+  }
+
+  @Test
+  void workPackageRemoveWatcher_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageRemoveWatcher(null, null));
+  }
+
+  @Test
+  void workPackageReminders_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageReminders(null));
+  }
+
+  @Test
+  void workPackageAddReminder_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageAddReminder(null, null, null));
+  }
+
+  @Test
+  void reminderDelete_validationExceptions() {
+    assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.reminderDelete(null));
+  }
+
+  @Test
   void safeEditWorkPackagePrompt_containsInputsAndInstructions() {
     GetPromptResult result = workPackageTools.safeEditWorkPackagePrompt("123", "do it");
 
