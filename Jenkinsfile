@@ -15,8 +15,10 @@
 // JUnit and Workspace Cleanup are NOT installed, so timestamps()/ansiColor()/junit/cleanWs are
 // intentionally OMITTED. Pods are ephemeral (podRetention: Never).
 //
-// Scope: CI (build + test) PLUS an image build & push to Harbor via Buildah, gated to the
-// deployment branch (main -> prod). No SonarQube stage yet (no 'openproject-mcp' project
+// Scope: CI (build + test) PLUS an image build & push to Harbor via Buildah, PLUS CD (auto-
+// bumps the image tag in OpenFreight1/infras' apps/openproject-mcp/deployment.yaml and pushes
+// directly to its main — ArgoCD's automated+selfHeal sync then rolls it out) — all gated to
+// the deployment branch (main -> prod). No SonarQube stage yet (no 'openproject-mcp' project
 // configured in SonarQube) — add one following BeeCO-CoreCO-Management-Service's pattern if
 // wanted later.
 
@@ -144,7 +146,8 @@ spec:
               script: 'mvn -q -B -ntp help:evaluate -Dexpression=project.version -DforceStdout | tail -n1').trim()
           }
           def shortSha = (env.GIT_COMMIT ?: 'unknown').take(7)
-          env.IMAGE_REF     = "${env.REGISTRY}/${env.IMAGE}:${version}-${shortSha}"
+          env.PKG_TAG       = "${version}-${shortSha}"
+          env.IMAGE_REF     = "${env.REGISTRY}/${env.IMAGE}:${env.PKG_TAG}"
           env.IMAGE_REF_ENV = "${env.REGISTRY}/${env.IMAGE}:prod"
           echo "Pushing ${env.IMAGE_REF}  (+ moving tag :prod)"
         }
@@ -157,6 +160,42 @@ spec:
               buildah build -f docker/Dockerfile -t "$IMAGE_REF" -t "$IMAGE_REF_ENV" "$WORKSPACE"
               buildah push "$IMAGE_REF"
               buildah push "$IMAGE_REF_ENV"
+            '''
+          }
+        }
+      }
+    }
+
+    // Auto-deploy: bump the image tag in OpenFreight1/infras and push directly to its main.
+    // infras' own Jenkinsfile is a "validation gate that runs BEFORE ArgoCD syncs" (never
+    // gates the merge itself, see its header comment), so a direct push here is the same
+    // trust level as any other push to that repo's main — ArgoCD (automated + selfHeal) picks
+    // it up on its next poll (~3 min), no manual PR/merge step needed for a routine image bump.
+    //
+    // PREREQUISITES (already in place): Jenkins 'Username with password' credential id
+    // 'of1-github' with push access to OpenFreight1/infras.
+    stage('Deploy (bump infras)') {
+      when {
+        branch 'main'
+      }
+      steps {
+        container('jnlp') {
+          withCredentials([usernamePassword(credentialsId: 'of1-github',
+              usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+            sh '''
+              set -eu
+              rm -rf infras-deploy
+              git clone --depth 1 "https://${GH_USER}:${GH_TOKEN}@github.com/OpenFreight1/infras.git" infras-deploy
+              cd infras-deploy
+              sed -i "s#image: registry.openfreightone.com/platform/openproject-mcp:.*#image: registry.openfreightone.com/platform/openproject-mcp:${PKG_TAG}#" apps/openproject-mcp/deployment.yaml
+              git config user.name "jenkins-bot"
+              git config user.email "jenkins@openfreightone.com"
+              if git diff --quiet; then
+                echo "deployment.yaml already at ${PKG_TAG}, nothing to push"
+              else
+                git commit -am "chore(openproject-mcp): auto-deploy image ${PKG_TAG}"
+                git push origin main
+              fi
             '''
           }
         }

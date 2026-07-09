@@ -2,6 +2,7 @@ package de.tklein.tklab.openproject.mcp.tools;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import de.tklein.tklab.openproject.mcp.dto.TimeEntryDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto.OnCreate;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
@@ -14,6 +15,7 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.groups.Default;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
@@ -82,6 +84,38 @@ public class WorkPackageTools {
   public boolean workPackageChangeStatus(@NotNull Integer workPackageId,
       @JsonPropertyDescription("The numerical status id from MCP tool 'statusList'.") @NotNull Integer statusId) {
     return openProjectApiClient.workPackageChangeStatus(workPackageId, statusId);
+  }
+
+  @McpTool(
+      description = "Sets a work package's version (e.g. sprint/milestone), or clears it if versionId is omitted/null. Use 'versionList' to resolve names to ids.")
+  public boolean workPackageSetVersion(@NotNull Integer workPackageId,
+      @JsonPropertyDescription("The numerical version id from MCP tool 'versionList', or omit/null to clear.") @JsonProperty Integer versionId) {
+    return openProjectApiClient.workPackageSetVersion(workPackageId, versionId);
+  }
+
+  @McpTool(
+      description = "Sets a work package's category, or clears it if categoryId is omitted/null. Use 'categoryList' to resolve names to ids.")
+  public boolean workPackageSetCategory(@NotNull Integer workPackageId,
+      @JsonPropertyDescription("The numerical category id from MCP tool 'categoryList', or omit/null to clear.") @JsonProperty Integer categoryId) {
+    return openProjectApiClient.workPackageSetCategory(workPackageId, categoryId);
+  }
+
+  @McpTool(
+      description = "Logs time spent on a work package. spentOn defaults to today if omitted. Use 'timeEntryActivityList' to resolve an optional activity id.")
+  public Integer workPackageLogTime(@NotNull Integer workPackageId,
+      @JsonPropertyDescription("Time spent in ISO 8601 duration format (e.g. 'PT2H30M' for 2.5 hours).") @NotNull String hours,
+      @JsonPropertyDescription("Optional comment describing the logged time.") @JsonProperty String comment,
+      @JsonPropertyDescription("The date the time was spent, in YYYY-MM-DD format. Defaults to today if omitted.") @JsonProperty LocalDate spentOn,
+      @JsonPropertyDescription("Optional numerical time entry activity id from MCP tool 'timeEntryActivityList'.") @JsonProperty Integer activityId) {
+    return openProjectApiClient.workPackageLogTime(workPackageId, hours, comment, spentOn,
+        activityId);
+  }
+
+  @McpTool(
+      description = "Lists the time entries logged against a work package.",
+      annotations = @McpAnnotations(readOnlyHint = true))
+  public List<TimeEntryDto> workPackageTimeEntries(@NotNull Integer workPackageId) {
+    return openProjectApiClient.timeEntryList(workPackageId);
   }
 
   @McpTool(

@@ -101,6 +101,54 @@ class WorkPackageToolsTest {
   }
 
   @Test
+  void workPackageSetVersion_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageSetVersion(null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageSetVersion.workPackageId"
+            // versionId is intentionally nullable (null = clear)
+        );
+  }
+
+  @Test
+  void workPackageSetCategory_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageSetCategory(null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageSetCategory.workPackageId"
+            // categoryId is intentionally nullable (null = clear)
+        );
+  }
+
+  @Test
+  void workPackageLogTime_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageLogTime(null, null, null, null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageLogTime.workPackageId",
+            "workPackageLogTime.hours"
+            // comment/spentOn/activityId are optional
+        );
+  }
+
+  @Test
+  void workPackageTimeEntries_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageTimeEntries(null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageTimeEntries.workPackageId"
+        );
+  }
+
+  @Test
   void workPackageAssign_validationExceptions() {
     var ex = assertThrows(ConstraintViolationException.class,
         () -> workPackageTools.workPackageAssign(null, null));

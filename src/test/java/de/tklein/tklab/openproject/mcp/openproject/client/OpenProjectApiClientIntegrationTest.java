@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import de.tklein.tklab.openproject.mcp.TestConstants;
+import de.tklein.tklab.openproject.mcp.dto.CategoryDto;
 import de.tklein.tklab.openproject.mcp.dto.PriorityDto;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.dto.RelationDto;
 import de.tklein.tklab.openproject.mcp.dto.StatusDto;
+import de.tklein.tklab.openproject.mcp.dto.TimeEntryActivityDto;
+import de.tklein.tklab.openproject.mcp.dto.TimeEntryDto;
 import de.tklein.tklab.openproject.mcp.dto.TypeDto;
 import de.tklein.tklab.openproject.mcp.dto.UserDto;
+import de.tklein.tklab.openproject.mcp.dto.VersionDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageUpdateDto;
@@ -318,6 +322,37 @@ class OpenProjectApiClientIntegrationTest {
     List<WorkPackageDto> filteredByStatus = client.workPackageList(demoProjectId, null,
         otherStatusId);
     assertThat(filteredByStatus).extracting(WorkPackageDto::getId).contains(wpA);
+
+    // --- Version (only if the demo project has one seeded)
+    List<VersionDto> versions = client.versionList(demoProjectId);
+    if (!versions.isEmpty()) {
+      Integer versionId = versions.getFirst().getId();
+      assertThat(client.workPackageSetVersion(wpA, versionId)).isTrue();
+      assertThat(client.workPackageShow(wpA).getVersionId()).isEqualTo(versionId);
+      assertThat(client.workPackageSetVersion(wpA, null)).isTrue();
+      assertThat(client.workPackageShow(wpA).getVersionId()).isNull();
+    }
+
+    // --- Category (only if the demo project has one seeded)
+    List<CategoryDto> categories = client.categoryList(demoProjectId);
+    if (!categories.isEmpty()) {
+      Integer categoryId = categories.getFirst().getId();
+      assertThat(client.workPackageSetCategory(wpA, categoryId)).isTrue();
+      assertThat(client.workPackageShow(wpA).getCategoryId()).isEqualTo(categoryId);
+      assertThat(client.workPackageSetCategory(wpA, null)).isTrue();
+      assertThat(client.workPackageShow(wpA).getCategoryId()).isNull();
+    }
+
+    // --- Log time
+    Integer timeEntryId = client.workPackageLogTime(wpA, "PT2H", "IntegrationTest time entry",
+        LocalDate.now(), null);
+    assertThat(timeEntryId).isNotNull().isGreaterThan(0);
+
+    List<TimeEntryDto> timeEntries = client.timeEntryList(wpA);
+    assertThat(timeEntries).extracting(TimeEntryDto::getId).contains(timeEntryId);
+
+    List<TimeEntryActivityDto> activities = client.timeEntryActivityList();
+    assertThat(activities).isNotEmpty();
 
     // --- Upload attachment
     byte[] content = "hello from integration test".getBytes(StandardCharsets.UTF_8);
