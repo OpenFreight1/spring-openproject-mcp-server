@@ -5,26 +5,35 @@ import static de.tklein.tklab.openproject.mcp.util.PatchMap.Nullable.ALLOW_NULL_
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tklein.tklab.openproject.mcp.dto.CategoryDto;
 import de.tklein.tklab.openproject.mcp.dto.PriorityDto;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.dto.RelationDto;
 import de.tklein.tklab.openproject.mcp.dto.StatusDto;
+import de.tklein.tklab.openproject.mcp.dto.TimeEntryActivityDto;
+import de.tklein.tklab.openproject.mcp.dto.TimeEntryDto;
 import de.tklein.tklab.openproject.mcp.dto.TypeDto;
 import de.tklein.tklab.openproject.mcp.dto.UserDto;
+import de.tklein.tklab.openproject.mcp.dto.VersionDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageUpdateDto;
+import de.tklein.tklab.openproject.mcp.mapper.CategoryMapper;
 import de.tklein.tklab.openproject.mcp.mapper.PriorityMapper;
 import de.tklein.tklab.openproject.mcp.mapper.ProjectMapper;
 import de.tklein.tklab.openproject.mcp.mapper.RelationMapper;
 import de.tklein.tklab.openproject.mcp.mapper.StatusMapper;
+import de.tklein.tklab.openproject.mcp.mapper.TimeEntryActivityMapper;
+import de.tklein.tklab.openproject.mcp.mapper.TimeEntryMapper;
 import de.tklein.tklab.openproject.mcp.mapper.TypeMapper;
 import de.tklein.tklab.openproject.mcp.mapper.UserMapper;
+import de.tklein.tklab.openproject.mcp.mapper.VersionMapper;
 import de.tklein.tklab.openproject.mcp.mapper.WorkPackageMapper;
 import de.tklein.tklab.openproject.mcp.tools.RelationTools.RelationType;
 import de.tklein.tklab.openproject.mcp.util.PatchMap;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +66,10 @@ public class OpenProjectApiClient {
   private final UserMapper userMapper;
   private final StatusMapper statusMapper;
   private final ObjectMapper objectMapper;
+  private final TimeEntryMapper timeEntryMapper;
+  private final TimeEntryActivityMapper timeEntryActivityMapper;
+  private final VersionMapper versionMapper;
+  private final CategoryMapper categoryMapper;
 
   public UserDto root() {
     var result = restOperations.getJson("/api/v3");
@@ -180,6 +193,62 @@ public class OpenProjectApiClient {
   public List<StatusDto> statusList() {
     var result = restOperations.getJson("/api/v3/statuses");
     return restOperations.mapEmbeddedElements(result, statusMapper::toDto);
+  }
+
+  public boolean workPackageSetVersion(@NotNull Integer workPackageId, Integer versionId) {
+    var wp = restOperations.getJson("/api/v3/work_packages/{wpId}", workPackageId);
+    int lockVersion = wp.path("lockVersion").asInt();
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "lockVersion", lockVersion,
+        "versionHref", versionId == null ? null : "/api/v3/versions/" + versionId);
+    var jsonBody = templateRenderer.render("update_version.ftl", model);
+    restOperations.patchJson("/api/v3/work_packages/{workPackageId}", jsonBody, workPackageId);
+    return true;
+  }
+
+  public List<VersionDto> versionList(@Nonnull Integer projectId) {
+    var result = restOperations.getJson("/api/v3/projects/{projectId}/versions", projectId);
+    return restOperations.mapEmbeddedElements(result, versionMapper::toDto);
+  }
+
+  public boolean workPackageSetCategory(@NotNull Integer workPackageId, Integer categoryId) {
+    var wp = restOperations.getJson("/api/v3/work_packages/{wpId}", workPackageId);
+    int lockVersion = wp.path("lockVersion").asInt();
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "lockVersion", lockVersion,
+        "categoryHref", categoryId == null ? null : "/api/v3/categories/" + categoryId);
+    var jsonBody = templateRenderer.render("update_category.ftl", model);
+    restOperations.patchJson("/api/v3/work_packages/{workPackageId}", jsonBody, workPackageId);
+    return true;
+  }
+
+  public List<CategoryDto> categoryList(@Nonnull Integer projectId) {
+    var result = restOperations.getJson("/api/v3/projects/{projectId}/categories", projectId);
+    return restOperations.mapEmbeddedElements(result, categoryMapper::toDto);
+  }
+
+  public Integer workPackageLogTime(@NotNull Integer workPackageId, @NotNull String hours,
+      String comment, LocalDate spentOn, Integer activityId) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "workPackageId", workPackageId,
+        "hours", hours,
+        "comment", comment,
+        "spentOn", spentOn == null ? LocalDate.now().toString() : spentOn.toString(),
+        "activityId", activityId);
+    var jsonBody = templateRenderer.render("create_time_entry.ftl", model);
+    var result = restOperations.postJson("/api/v3/time_entries", jsonBody);
+    return result.findValue("id").asInt();
+  }
+
+  public List<TimeEntryDto> timeEntryList(@Nonnull Integer workPackageId) {
+    var filters = "[{\"workPackage\":{\"operator\":\"=\",\"values\":[\"" + workPackageId + "\"]}}]";
+    var result = restOperations.getJson("/api/v3/time_entries?filters={filters}", filters);
+    return restOperations.mapEmbeddedElements(result, timeEntryMapper::toDto);
+  }
+
+  public List<TimeEntryActivityDto> timeEntryActivityList() {
+    var result = restOperations.getJson("/api/v3/time_entries/activities");
+    return restOperations.mapEmbeddedElements(result, timeEntryActivityMapper::toDto);
   }
 
   public Integer workPackageUploadAttachment(Integer workPackageId, String fileName,

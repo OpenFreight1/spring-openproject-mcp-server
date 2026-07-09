@@ -76,6 +76,15 @@ public interface WorkPackageMapper {
         dto.setAssignee(assigneeLink.path("title").asText(null));
         dto.setAssigneeId(Utils.hrefToId(assigneeLink.path("href").asText(null)));
 
+        // Version/Category: href fehlt/leer wenn nicht gesetzt -> id/name bleiben null
+        JsonNode versionLink = node.path("_links").path("version");
+        dto.setVersion(versionLink.path("title").asText(null));
+        dto.setVersionId(Utils.hrefToId(versionLink.path("href").asText(null)));
+
+        JsonNode categoryLink = node.path("_links").path("category");
+        dto.setCategory(categoryLink.path("title").asText(null));
+        dto.setCategoryId(Utils.hrefToId(categoryLink.path("href").asText(null)));
+
         dto.setHref(node.path("_links").path("self").path("href").asText(null));
         return dto;
     }

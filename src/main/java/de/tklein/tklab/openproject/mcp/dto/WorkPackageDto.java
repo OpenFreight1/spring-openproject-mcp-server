@@ -90,6 +90,22 @@ public class WorkPackageDto {
   private Integer assigneeId;
 
   @JsonProperty
+  @JsonPropertyDescription("The name of the version (e.g. sprint/milestone) this work package is assigned to, or null if none.")
+  private String version;
+
+  @JsonProperty
+  @JsonPropertyDescription("The numerical ID of the version. Use MCP tool 'versionList' to resolve names to IDs.")
+  private Integer versionId;
+
+  @JsonProperty
+  @JsonPropertyDescription("The name of the category this work package is assigned to, or null if none.")
+  private String category;
+
+  @JsonProperty
+  @JsonPropertyDescription("The numerical ID of the category. Use MCP tool 'categoryList' to resolve names to IDs.")
+  private Integer categoryId;
+
+  @JsonProperty
   @JsonPropertyDescription("The API link to this work package resource.")
   private String href;
 }
