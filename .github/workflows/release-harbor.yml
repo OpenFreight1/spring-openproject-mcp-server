@@ -1,0 +1,110 @@
+name: Build & Push Docker Image to Harbor (from Tag)
+
+# OF1 fork: pushes to our own Harbor instead of upstream's Docker Hub
+# (registry.openfreightone.com), so we can ship our own tools (e.g.
+# workPackageAddComment) ahead of upstream. Structurally identical to
+# release-docker.yml otherwise (same build/SBOM steps, same multi-arch buildx).
+#
+# Requires repo secrets (Settings -> Secrets and variables -> Actions):
+#   HARBOR_ROBOT_USER  - e.g. robot$openproject-mcp
+#   HARBOR_ROBOT_TOKEN - that robot account's token
+# The robot needs PUSH permission on the target Harbor project (env.IMAGE_NAME
+# below). Harbor does not auto-create projects — create it first if missing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git Tag/Version (e.g. 0.3.1 or v0.3.1)"
+        required: true
+        type: string
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      REGISTRY: registry.openfreightone.com
+      IMAGE_NAME: registry.openfreightone.com/platform/openproject-mcp
+
+    steps:
+      - name: Check Harbor secrets exist
+        run: |
+          if [ -z "${{ secrets.HARBOR_ROBOT_TOKEN }}" ]; then
+            echo "HARBOR_ROBOT_TOKEN is missing"
+            exit 1
+          else
+            echo "HARBOR_ROBOT_TOKEN is set"
+          fi
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: refs/tags/${{ inputs.tag }}
+
+      - name: Set PKG_VERSION (strip optional leading "v")
+        id: ver
+        shell: bash
+        run: |
+          TAG="${{ inputs.tag }}"
+          PKG_VERSION="${TAG#v}"
+          echo "PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
+          echo "pkg_version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java + Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Build JAR (mvn clean package)
+        run: mvn -B -DskipTests clean package
+
+      - name: Convert CycloneDX SBOM to SPDX
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "./target/classes/META-INF/sbom/application.cdx.json"
+          docker run --rm \
+            -v "${PWD}/target/classes/META-INF/sbom:/work" --platform linux/amd64 \
+            cyclonedx/cyclonedx-cli \
+            convert \
+            --input-file /work/application.cdx.json \
+            --output-file /work/application.spdx.json \
+            --output-format spdxjson
+
+      - name: Set up QEMU (multi-arch)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USER }}
+          password: ${{ secrets.HARBOR_ROBOT_TOKEN }}
+
+      - name: Set build date
+        run: echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+
+      - name: Build & Push multi-arch image
+        run: |
+          docker buildx build \
+            -f docker/Dockerfile \
+            -t "${IMAGE_NAME}:${PKG_VERSION}" \
+            -t "${IMAGE_NAME}:latest" \
+            --label "org.opencontainers.image.build-date=${BUILD_DATE}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.version=${PKG_VERSION}" \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --label "org.opencontainers.image.created=${BUILD_DATE}" \
+            --attest type=sbom,generator=docker/scout-sbom-indexer:latest \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            .

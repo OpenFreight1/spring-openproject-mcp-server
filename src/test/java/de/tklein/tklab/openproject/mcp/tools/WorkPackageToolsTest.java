@@ -101,6 +101,18 @@ class WorkPackageToolsTest {
   }
 
   @Test
+  void workPackageAddComment_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageAddComment(null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageAddComment.workPackageId",
+            "workPackageAddComment.comment"
+        );
+  }
+
+  @Test
   void workPackageUploadAttachment_validationExceptions() {
     assertThrows(ConstraintViolationException.class,
         () -> workPackageTools.workPackageUploadAttachment(null, null, null, null));

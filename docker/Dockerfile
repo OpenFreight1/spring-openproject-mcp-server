@@ -10,8 +10,10 @@ WORKDIR /app
 
 COPY target/spring-openproject-mcp-server*.jar app.jar
 COPY target/classes/application-prod.properties application-prod.properties
-COPY target/classes/META-INF/sbom/application.cdx.json application.cdx.json
-COPY target/classes/META-INF/sbom/application.spdx.json application.spdx.json
+# Upstream also copies META-INF/sbom/application.{cdx,spdx}.json for provenance
+# attestation. Dropped here: spdx.json needs an extra cyclonedx-cli conversion
+# step outside `mvn verify` (see upstream's .github/workflows/release-docker.yml)
+# that our Jenkins pipeline doesn't run, and neither file is read at runtime.
 
 RUN addgroup --system spring && \
     adduser --system --ingroup spring spring && \

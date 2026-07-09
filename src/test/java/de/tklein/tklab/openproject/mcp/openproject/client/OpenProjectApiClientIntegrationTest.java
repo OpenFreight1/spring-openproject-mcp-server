@@ -274,6 +274,15 @@ class OpenProjectApiClientIntegrationTest {
     assertThat(updatedShown).isNotNull();
     assertThat(updatedShown.getSubject()).isEqualTo(updatedSubject);
 
+    // --- Add comment (must not alter the description set above)
+    Integer commentId = client.workPackageAddComment(wpA, "IntegrationTest comment");
+    assertThat(commentId).isNotNull().isGreaterThan(0);
+
+    WorkPackageDto shownAfterComment = client.workPackageShow(wpA);
+    assertThat(shownAfterComment).isNotNull();
+    assertThat(shownAfterComment.getSubject()).isEqualTo(updatedSubject);
+    assertThat(shownAfterComment.getDescription()).isEqualTo(updatedShown.getDescription());
+
     // --- Upload attachment
     byte[] content = "hello from integration test".getBytes(StandardCharsets.UTF_8);
     Integer attachmentId = client.workPackageUploadAttachment(wpA, "integration-test.txt", content,

@@ -67,6 +67,12 @@ public class WorkPackageTools {
   }
 
   @McpTool(
+      description = "Adds a comment (activity) to a work package. Does not change the work package's description, status or any other field.")
+  public Integer workPackageAddComment(@NotNull Integer workPackageId, @NotNull String comment) {
+    return openProjectApiClient.workPackageAddComment(workPackageId, comment);
+  }
+
+  @McpTool(
       description = "Uploads an attachment to a work package. Provide workPackageId, fileName and base64-encoded fileContent. Optionally provide fileContentType.")
   public Integer workPackageUploadAttachment(@NotNull Integer workPackageId,
       @NotNull String fileName,
