@@ -39,17 +39,18 @@ public class ProjectTools {
   }
 
   @McpTool(description = "Creates a new project. The identifier is optional (OpenProject derives one from the name if omitted).")
-  public Integer projectCreate(@NotNull String name,
+  public Integer projectCreate(
+      @JsonPropertyDescription("The project's name.") @NotNull String projectName,
       @JsonPropertyDescription("Optional unique string identifier (e.g. 'my-project'). Auto-derived from name if omitted.") @JsonProperty String identifier,
       @JsonPropertyDescription("Optional project description.") @JsonProperty String description) {
-    return openProjectApiClient.projectCreate(name, identifier, description);
+    return openProjectApiClient.projectCreate(projectName, identifier, description);
   }
 
   @McpTool(description = "Updates a project's name and/or description. Omitted fields are left unchanged.")
   public boolean projectUpdate(@NotNull Integer projectId,
-      @JsonPropertyDescription("New project name, or omit to leave unchanged.") @JsonProperty String name,
+      @JsonPropertyDescription("New project name, or omit to leave unchanged.") @JsonProperty String projectName,
       @JsonPropertyDescription("New project description, or omit to leave unchanged.") @JsonProperty String description) {
-    return openProjectApiClient.projectUpdate(projectId, name, description);
+    return openProjectApiClient.projectUpdate(projectId, projectName, description);
   }
 
   @McpPrompt(name = "openproject.project.summary", description = "Generates a summary of project information")
