@@ -20,6 +20,10 @@ import lombok.With;
 public class UserDto {
 
   @JsonProperty
+  @JsonPropertyDescription("The unique numerical ID of the current user, extracted from href. Pass this to workPackageAssign to assign work packages to this user.")
+  private Integer id;
+
+  @JsonProperty
   @JsonPropertyDescription("The API link to the current user resource (_links.user.href).")
   private String href;
 

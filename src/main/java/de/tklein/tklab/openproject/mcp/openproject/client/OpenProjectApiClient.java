@@ -2,10 +2,13 @@ package de.tklein.tklab.openproject.mcp.openproject.client;
 
 import static de.tklein.tklab.openproject.mcp.util.PatchMap.Nullable.ALLOW_NULL_VALUES;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tklein.tklab.openproject.mcp.dto.PriorityDto;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.dto.RelationDto;
+import de.tklein.tklab.openproject.mcp.dto.StatusDto;
 import de.tklein.tklab.openproject.mcp.dto.TypeDto;
 import de.tklein.tklab.openproject.mcp.dto.UserDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
@@ -14,6 +17,7 @@ import de.tklein.tklab.openproject.mcp.dto.WorkPackageUpdateDto;
 import de.tklein.tklab.openproject.mcp.mapper.PriorityMapper;
 import de.tklein.tklab.openproject.mcp.mapper.ProjectMapper;
 import de.tklein.tklab.openproject.mcp.mapper.RelationMapper;
+import de.tklein.tklab.openproject.mcp.mapper.StatusMapper;
 import de.tklein.tklab.openproject.mcp.mapper.TypeMapper;
 import de.tklein.tklab.openproject.mcp.mapper.UserMapper;
 import de.tklein.tklab.openproject.mcp.mapper.WorkPackageMapper;
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -50,16 +55,48 @@ public class OpenProjectApiClient {
   private final PriorityMapper priorityMapper;
   private final RelationMapper relationMapper;
   private final UserMapper userMapper;
+  private final StatusMapper statusMapper;
+  private final ObjectMapper objectMapper;
 
   public UserDto root() {
     var result = restOperations.getJson("/api/v3");
     return userMapper.fromRoot(result);
   }
 
-  public List<WorkPackageDto> workPackageList(@Nonnull Integer projectId) {
-    var result = restOperations.getJson("/api/v3/projects/{projectId}/work_packages?pageSize=1000",
-        projectId);
+  /**
+   * @param assigneeId optional filter: numerical user id as string, or the pseudo-value "me"
+   *                    (resolved by OpenProject to the authenticated user); null/blank = no filter
+   * @param statusId   optional filter: numerical status id; null = no filter
+   */
+  public List<WorkPackageDto> workPackageList(@Nonnull Integer projectId, String assigneeId,
+      Integer statusId) {
+    var uriTemplate = "/api/v3/projects/{projectId}/work_packages?pageSize=1000";
+    var filters = buildFilters(assigneeId, statusId);
+    JsonNode result;
+    if (filters == null) {
+      result = restOperations.getJson(uriTemplate, projectId);
+    } else {
+      result = restOperations.getJson(uriTemplate + "&filters={filters}", projectId, filters);
+    }
     return restOperations.mapEmbeddedElements(result, workPackageMapper::toDto);
+  }
+
+  private String buildFilters(String assigneeId, Integer statusId) {
+    List<Map<String, Object>> filters = new ArrayList<>();
+    if (assigneeId != null && !assigneeId.isBlank()) {
+      filters.add(Map.of("assignee", Map.of("operator", "=", "values", List.of(assigneeId))));
+    }
+    if (statusId != null) {
+      filters.add(Map.of("status", Map.of("operator", "=", "values", List.of(statusId.toString()))));
+    }
+    if (filters.isEmpty()) {
+      return null;
+    }
+    try {
+      return objectMapper.writeValueAsString(filters);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Failed to serialize work package filters", e);
+    }
   }
 
   public WorkPackageDto workPackageShow(@Nonnull Integer workPackageId) {
@@ -113,6 +150,36 @@ public class OpenProjectApiClient {
     var result = restOperations.postJson("/api/v3/work_packages/{wpId}/activities", jsonBody,
         workPackageId);
     return result.findValue("id").asInt();
+  }
+
+  /**
+   * @param userId the user id to assign, or null to unassign
+   */
+  public boolean workPackageAssign(@NotNull Integer workPackageId, Integer userId) {
+    var wp = restOperations.getJson("/api/v3/work_packages/{wpId}", workPackageId);
+    int lockVersion = wp.path("lockVersion").asInt();
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "lockVersion", lockVersion,
+        "assigneeHref", userId == null ? null : "/api/v3/users/" + userId);
+    var jsonBody = templateRenderer.render("update_assignee.ftl", model);
+    restOperations.patchJson("/api/v3/work_packages/{workPackageId}", jsonBody, workPackageId);
+    return true;
+  }
+
+  public boolean workPackageChangeStatus(@NotNull Integer workPackageId, @NotNull Integer statusId) {
+    var wp = restOperations.getJson("/api/v3/work_packages/{wpId}", workPackageId);
+    int lockVersion = wp.path("lockVersion").asInt();
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "lockVersion", lockVersion,
+        "statusId", statusId);
+    var jsonBody = templateRenderer.render("update_status.ftl", model);
+    restOperations.patchJson("/api/v3/work_packages/{workPackageId}", jsonBody, workPackageId);
+    return true;
+  }
+
+  public List<StatusDto> statusList() {
+    var result = restOperations.getJson("/api/v3/statuses");
+    return restOperations.mapEmbeddedElements(result, statusMapper::toDto);
   }
 
   public Integer workPackageUploadAttachment(Integer workPackageId, String fileName,

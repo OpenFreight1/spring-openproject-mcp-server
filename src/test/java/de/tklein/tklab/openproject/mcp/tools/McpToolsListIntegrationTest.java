@@ -62,6 +62,7 @@ class McpToolsListIntegrationTest {
     assertThat(tools.isArray()).isTrue();
 
     List<String> expectedToolNames = List.of(
+        "currentUser",
         "priorityList",
         "projectList",
         "relationAdd",
@@ -70,8 +71,11 @@ class McpToolsListIntegrationTest {
         "relationDelete",
         "relationDeleteParent",
         "relationList",
+        "statusList",
         "typeList",
         "workPackageAddComment",
+        "workPackageAssign",
+        "workPackageChangeStatus",
         "workPackageCreate",
         "workPackageList",
         "workPackageShow",

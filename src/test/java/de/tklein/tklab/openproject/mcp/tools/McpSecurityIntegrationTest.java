@@ -55,7 +55,7 @@ class McpSecurityIntegrationTest {
           String token = (c == null) ? null : c.bearerToken();
 
           if (VALID_TOKEN.equals(token)) {
-            return new UserDto("/api/v3/users/999", "test-user");
+            return new UserDto(999, "/api/v3/users/999", "test-user");
           }
           throw new UnauthorizedException("Token rejected by OpenProject (test stub)");
         }

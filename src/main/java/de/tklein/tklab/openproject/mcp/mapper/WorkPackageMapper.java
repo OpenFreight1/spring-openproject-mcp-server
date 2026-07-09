@@ -2,6 +2,7 @@ package de.tklein.tklab.openproject.mcp.mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
+import de.tklein.tklab.openproject.mcp.util.Utils;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import org.mapstruct.Mapper;
@@ -64,6 +65,16 @@ public interface WorkPackageMapper {
         } else {
             dto.setPriority(priorityNode.path("name").asText(null));
         }
+
+        // Status: nur in _links vorhanden (kein _embedded für status bei WP-Responses)
+        JsonNode statusLink = node.path("_links").path("status");
+        dto.setStatus(statusLink.path("title").asText(null));
+        dto.setStatusId(Utils.hrefToId(statusLink.path("href").asText(null)));
+
+        // Assignee: href fehlt/leer wenn nicht zugewiesen -> id/name bleiben null
+        JsonNode assigneeLink = node.path("_links").path("assignee");
+        dto.setAssignee(assigneeLink.path("title").asText(null));
+        dto.setAssigneeId(Utils.hrefToId(assigneeLink.path("href").asText(null)));
 
         dto.setHref(node.path("_links").path("self").path("href").asText(null));
         return dto;
