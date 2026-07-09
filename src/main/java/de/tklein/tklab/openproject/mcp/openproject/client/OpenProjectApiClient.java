@@ -5,23 +5,31 @@ import static de.tklein.tklab.openproject.mcp.util.PatchMap.Nullable.ALLOW_NULL_
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tklein.tklab.openproject.mcp.dto.AttachmentDto;
+import de.tklein.tklab.openproject.mcp.dto.BulkItemResultDto;
 import de.tklein.tklab.openproject.mcp.dto.CategoryDto;
+import de.tklein.tklab.openproject.mcp.dto.GroupDto;
 import de.tklein.tklab.openproject.mcp.dto.PriorityDto;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.dto.RelationDto;
+import de.tklein.tklab.openproject.mcp.dto.ReminderDto;
 import de.tklein.tklab.openproject.mcp.dto.StatusDto;
 import de.tklein.tklab.openproject.mcp.dto.TimeEntryActivityDto;
 import de.tklein.tklab.openproject.mcp.dto.TimeEntryDto;
 import de.tklein.tklab.openproject.mcp.dto.TypeDto;
 import de.tklein.tklab.openproject.mcp.dto.UserDto;
 import de.tklein.tklab.openproject.mcp.dto.VersionDto;
+import de.tklein.tklab.openproject.mcp.dto.WorkPackageBulkUpdateItemDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageUpdateDto;
+import de.tklein.tklab.openproject.mcp.mapper.AttachmentMapper;
 import de.tklein.tklab.openproject.mcp.mapper.CategoryMapper;
+import de.tklein.tklab.openproject.mcp.mapper.GroupMapper;
 import de.tklein.tklab.openproject.mcp.mapper.PriorityMapper;
 import de.tklein.tklab.openproject.mcp.mapper.ProjectMapper;
 import de.tklein.tklab.openproject.mcp.mapper.RelationMapper;
+import de.tklein.tklab.openproject.mcp.mapper.ReminderMapper;
 import de.tklein.tklab.openproject.mcp.mapper.StatusMapper;
 import de.tklein.tklab.openproject.mcp.mapper.TimeEntryActivityMapper;
 import de.tklein.tklab.openproject.mcp.mapper.TimeEntryMapper;
@@ -70,6 +78,9 @@ public class OpenProjectApiClient {
   private final TimeEntryActivityMapper timeEntryActivityMapper;
   private final VersionMapper versionMapper;
   private final CategoryMapper categoryMapper;
+  private final GroupMapper groupMapper;
+  private final AttachmentMapper attachmentMapper;
+  private final ReminderMapper reminderMapper;
 
   public UserDto root() {
     var result = restOperations.getJson("/api/v3");
@@ -272,6 +283,215 @@ public class OpenProjectApiClient {
   public List<ProjectDto> projectList() {
     var result = restOperations.getJson("/api/v3/projects");
     return restOperations.mapEmbeddedElements(result, projectMapper::toDto);
+  }
+
+  public ProjectDto projectShow(@Nonnull Integer projectId) {
+    var result = restOperations.getJson("/api/v3/projects/{projectId}", projectId);
+    return projectMapper.toDto(result);
+  }
+
+  public Integer projectCreate(String name, String identifier, String description) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "name", name,
+        "identifier", identifier,
+        "description", description);
+    var jsonBody = templateRenderer.render("create_project.ftl", model);
+    var result = restOperations.postJson("/api/v3/projects", jsonBody);
+    return result.findValue("id").asInt();
+  }
+
+  public boolean projectUpdate(@Nonnull Integer projectId, String name, String description) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "name", name,
+        "description", description);
+    var jsonBody = templateRenderer.render("update_project.ftl", model);
+    restOperations.patchJson("/api/v3/projects/{projectId}", jsonBody, projectId);
+    return true;
+  }
+
+  public List<UserDto> userList(String search) {
+    var uriTemplate = "/api/v3/users?pageSize=100";
+    JsonNode result;
+    if (search != null && !search.isBlank()) {
+      var filters = "[{\"name\":{\"operator\":\"~\",\"values\":[\"" + search + "\"]}}]";
+      result = restOperations.getJson(uriTemplate + "&filters={filters}", filters);
+    } else {
+      result = restOperations.getJson(uriTemplate);
+    }
+    return restOperations.mapEmbeddedElements(result, userMapper::fromPrincipalResource);
+  }
+
+  public List<GroupDto> groupList() {
+    var result = restOperations.getJson("/api/v3/groups");
+    return restOperations.mapEmbeddedElements(result, groupMapper::toDto);
+  }
+
+  public List<UserDto> workPackageWatcherList(@Nonnull Integer workPackageId) {
+    var result = restOperations.getJson("/api/v3/work_packages/{wpId}/watchers", workPackageId);
+    return restOperations.mapEmbeddedElements(result, userMapper::fromPrincipalResource);
+  }
+
+  public boolean workPackageAddWatcher(@Nonnull Integer workPackageId, @NotNull Integer userId) {
+    var jsonBody = "{\"user\":{\"href\":\"/api/v3/users/" + userId + "\"}}";
+    restOperations.postJson("/api/v3/work_packages/{wpId}/watchers", jsonBody, workPackageId);
+    return true;
+  }
+
+  public boolean workPackageRemoveWatcher(@Nonnull Integer workPackageId, @NotNull Integer userId) {
+    restOperations.delete("/api/v3/work_packages/{wpId}/watchers/{userId}", workPackageId, userId);
+    return true;
+  }
+
+  public List<ReminderDto> workPackageReminderList(@Nonnull Integer workPackageId) {
+    var result = restOperations.getJson("/api/v3/work_packages/{wpId}/reminders", workPackageId);
+    return restOperations.mapEmbeddedElements(result, reminderMapper::toDto);
+  }
+
+  public Integer workPackageAddReminder(@Nonnull Integer workPackageId, @NotNull String remindAt,
+      String note) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES, "remindAt", remindAt, "note", note);
+    var jsonBody = templateRenderer.render("create_reminder.ftl", model);
+    var result = restOperations.postJson("/api/v3/work_packages/{wpId}/reminders", jsonBody,
+        workPackageId);
+    return result.findValue("id").asInt();
+  }
+
+  public boolean reminderDelete(@NotNull Integer reminderId) {
+    restOperations.delete("/api/v3/reminders/{reminderId}", reminderId);
+    return true;
+  }
+
+  public List<WorkPackageDto> searchWorkPackages(@NotNull String query, Integer projectId,
+      Integer statusId, String assigneeId) {
+    List<Map<String, Object>> filters = new ArrayList<>();
+    filters.add(Map.of("subject", Map.of("operator", "~", "values", List.of(query))));
+    if (statusId != null) {
+      filters.add(Map.of("status", Map.of("operator", "=", "values", List.of(statusId.toString()))));
+    }
+    if (assigneeId != null && !assigneeId.isBlank()) {
+      filters.add(Map.of("assignee", Map.of("operator", "=", "values", List.of(assigneeId))));
+    }
+    String filtersJson;
+    try {
+      filtersJson = objectMapper.writeValueAsString(filters);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Failed to serialize search filters", e);
+    }
+    JsonNode result;
+    if (projectId != null) {
+      result = restOperations.getJson(
+          "/api/v3/projects/{projectId}/work_packages?pageSize=100&filters={filters}", projectId,
+          filtersJson);
+    } else {
+      result = restOperations.getJson("/api/v3/work_packages?pageSize=100&filters={filters}",
+          filtersJson);
+    }
+    return restOperations.mapEmbeddedElements(result, workPackageMapper::toDto);
+  }
+
+  public List<BulkItemResultDto> workPackagesBulkCreate(@NotNull Integer projectId,
+      @NotNull List<WorkPackageCreateDto> workPackages) {
+    List<BulkItemResultDto> results = new ArrayList<>();
+    for (int i = 0; i < workPackages.size(); i++) {
+      var result = new BulkItemResultDto();
+      result.setIndex(i);
+      try {
+        Integer id = workPackageCreate(projectId, workPackages.get(i));
+        result.setWorkPackageId(id);
+        result.setSuccess(true);
+      } catch (RestClientResponseException e) {
+        result.setSuccess(false);
+        result.setError(e.getStatusCode().value() + ": " + e.getResponseBodyAsString());
+      }
+      results.add(result);
+    }
+    return results;
+  }
+
+  public List<BulkItemResultDto> workPackagesBulkUpdate(
+      @NotNull List<WorkPackageBulkUpdateItemDto> items) {
+    List<BulkItemResultDto> results = new ArrayList<>();
+    for (int i = 0; i < items.size(); i++) {
+      var item = items.get(i);
+      var result = new BulkItemResultDto();
+      result.setIndex(i);
+      result.setWorkPackageId(item.getWorkPackageId());
+      try {
+        workPackageUpdate(item.getWorkPackageId(), item.getWorkPackage());
+        result.setSuccess(true);
+      } catch (RestClientResponseException e) {
+        result.setSuccess(false);
+        result.setError(e.getStatusCode().value() + ": " + e.getResponseBodyAsString());
+      }
+      results.add(result);
+    }
+    return results;
+  }
+
+  public List<AttachmentDto> workPackageAttachmentList(@Nonnull Integer workPackageId) {
+    var result = restOperations.getJson("/api/v3/work_packages/{wpId}/attachments", workPackageId);
+    return restOperations.mapEmbeddedElements(result, attachmentMapper::toDto);
+  }
+
+  public boolean attachmentDelete(@NotNull Integer attachmentId) {
+    restOperations.delete("/api/v3/attachments/{attachmentId}", attachmentId);
+    return true;
+  }
+
+  public VersionDto versionShow(@Nonnull Integer versionId) {
+    var result = restOperations.getJson("/api/v3/versions/{versionId}", versionId);
+    return versionMapper.toDto(result);
+  }
+
+  public Integer versionCreate(@NotNull Integer projectId, @NotNull String name,
+      String description, LocalDate startDate, LocalDate endDate) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "projectId", projectId,
+        "name", name,
+        "description", description,
+        "startDate", startDate == null ? null : startDate.toString(),
+        "endDate", endDate == null ? null : endDate.toString());
+    var jsonBody = templateRenderer.render("create_version_resource.ftl", model);
+    var result = restOperations.postJson("/api/v3/versions", jsonBody);
+    return result.findValue("id").asInt();
+  }
+
+  public boolean versionUpdate(@NotNull Integer versionId, String name, String description,
+      LocalDate startDate, LocalDate endDate) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "name", name,
+        "description", description,
+        "startDate", startDate == null ? null : startDate.toString(),
+        "endDate", endDate == null ? null : endDate.toString());
+    var jsonBody = templateRenderer.render("patch_version_resource.ftl", model);
+    restOperations.patchJson("/api/v3/versions/{versionId}", jsonBody, versionId);
+    return true;
+  }
+
+  public boolean versionDelete(@NotNull Integer versionId) {
+    restOperations.delete("/api/v3/versions/{versionId}", versionId);
+    return true;
+  }
+
+  public TimeEntryDto timeEntryShow(@Nonnull Integer timeEntryId) {
+    var result = restOperations.getJson("/api/v3/time_entries/{timeEntryId}", timeEntryId);
+    return timeEntryMapper.toDto(result);
+  }
+
+  public boolean timeEntryUpdate(@NotNull Integer timeEntryId, String hours, String comment,
+      LocalDate spentOn) {
+    var model = PatchMap.of(ALLOW_NULL_VALUES,
+        "hours", hours,
+        "comment", comment,
+        "spentOn", spentOn == null ? null : spentOn.toString());
+    var jsonBody = templateRenderer.render("update_time_entry.ftl", model);
+    restOperations.patchJson("/api/v3/time_entries/{timeEntryId}", jsonBody, timeEntryId);
+    return true;
+  }
+
+  public boolean timeEntryDelete(@NotNull Integer timeEntryId) {
+    restOperations.delete("/api/v3/time_entries/{timeEntryId}", timeEntryId);
+    return true;
   }
 
   public Collection<RelationDto> listRelationsForWorkPackage(@Nonnull Integer wpId) {
