@@ -38,7 +38,9 @@ spec:
     runAsUser: 0
   containers:
     - name: maven
-      image: maven:3.9-eclipse-temurin-21
+      # pom.xml pins java.version=25 (not 21 like BeeCO-CoreCO-Management-Service) — the
+      # compiler plugin's <release> can't target a JDK newer than the one running it.
+      image: maven:3.9-eclipse-temurin-25
       command: ["sh", "-c", "sleep infinity"]
       tty: true
       resources:
