@@ -71,6 +71,7 @@ class McpToolsListIntegrationTest {
         "relationDeleteParent",
         "relationList",
         "typeList",
+        "workPackageAddComment",
         "workPackageCreate",
         "workPackageList",
         "workPackageShow",
