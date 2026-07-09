@@ -31,7 +31,7 @@ class WorkPackageToolsTest {
   @Test
   void workPackageList_validationExceptions() {
     var ex = assertThrows(ConstraintViolationException.class,
-        () -> workPackageTools.workPackageList(null));
+        () -> workPackageTools.workPackageList(null, null, null));
     assertThat(ex.getConstraintViolations())
         .extracting(v -> v.getPropertyPath().toString())
         .containsExactlyInAnyOrder(
@@ -97,6 +97,42 @@ class WorkPackageToolsTest {
         .containsExactlyInAnyOrder(
             "workPackageUpdate.workPackage.lockVersion"
             // and not subject or typeId from superclass annotation !!
+        );
+  }
+
+  @Test
+  void workPackageAssign_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageAssign(null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageAssign.workPackageId"
+            // userId is intentionally nullable (null = unassign)
+        );
+  }
+
+  @Test
+  void workPackageChangeStatus_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageChangeStatus(null, null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageChangeStatus.workPackageId",
+            "workPackageChangeStatus.statusId"
+        );
+  }
+
+  @Test
+  void workPackageList_withOptionalFiltersOmitted_validationExceptions() {
+    var ex = assertThrows(ConstraintViolationException.class,
+        () -> workPackageTools.workPackageList(null, "me", null));
+    assertThat(ex.getConstraintViolations())
+        .extracting(v -> v.getPropertyPath().toString())
+        .containsExactlyInAnyOrder(
+            "workPackageList.projectId"
+            // assigneeId/statusId are optional filters, not required
         );
   }
 

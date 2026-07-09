@@ -74,6 +74,22 @@ public class WorkPackageDto {
   private String priority;
 
   @JsonProperty
+  @JsonPropertyDescription("The status name of the work package (e.g. 'New', 'In progress', 'Closed').")
+  private String status;
+
+  @JsonProperty
+  @JsonPropertyDescription("The numerical ID of the status. Use MCP tool 'statusList' to resolve names to IDs.")
+  private Integer statusId;
+
+  @JsonProperty
+  @JsonPropertyDescription("The display name of the assigned user, or null if unassigned.")
+  private String assignee;
+
+  @JsonProperty
+  @JsonPropertyDescription("The numerical ID of the assigned user, or null if unassigned.")
+  private Integer assigneeId;
+
+  @JsonProperty
   @JsonPropertyDescription("The API link to this work package resource.")
   private String href;
 }

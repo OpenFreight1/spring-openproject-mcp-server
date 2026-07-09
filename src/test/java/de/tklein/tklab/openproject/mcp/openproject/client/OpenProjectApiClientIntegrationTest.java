@@ -7,6 +7,7 @@ import de.tklein.tklab.openproject.mcp.TestConstants;
 import de.tklein.tklab.openproject.mcp.dto.PriorityDto;
 import de.tklein.tklab.openproject.mcp.dto.ProjectDto;
 import de.tklein.tklab.openproject.mcp.dto.RelationDto;
+import de.tklein.tklab.openproject.mcp.dto.StatusDto;
 import de.tklein.tklab.openproject.mcp.dto.TypeDto;
 import de.tklein.tklab.openproject.mcp.dto.UserDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
@@ -213,7 +214,7 @@ class OpenProjectApiClientIntegrationTest {
   void workPackageList_withNonExistentProjectId_throws404Exception() {
     // Contract: non-existent project should throw 404 (not return empty list)
     int nonExistentProjectId = Integer.MAX_VALUE;
-    assertThatThrownBy(() -> client.workPackageList(nonExistentProjectId))
+    assertThatThrownBy(() -> client.workPackageList(nonExistentProjectId, null, null))
         .isInstanceOf(RestClientResponseException.class)
         .satisfies(
             e -> assertThat(((RestClientResponseException) e).getStatusCode().value()).isEqualTo(
@@ -250,7 +251,7 @@ class OpenProjectApiClientIntegrationTest {
     Utils.sleep(Duration.ofSeconds(2));
 
     // --- List work packages (should include at least one of them)
-    List<WorkPackageDto> wps = client.workPackageList(demoProjectId);
+    List<WorkPackageDto> wps = client.workPackageList(demoProjectId, null, null);
     assertThat(wps).isNotNull().extracting(WorkPackageDto::getId).contains(wpA);
 
     // --- Show work package
@@ -282,6 +283,41 @@ class OpenProjectApiClientIntegrationTest {
     assertThat(shownAfterComment).isNotNull();
     assertThat(shownAfterComment.getSubject()).isEqualTo(updatedSubject);
     assertThat(shownAfterComment.getDescription()).isEqualTo(updatedShown.getDescription());
+
+    // --- Assign to current user, then unassign
+    UserDto me = client.root();
+    assertThat(me.getId()).isNotNull();
+
+    boolean assigned = client.workPackageAssign(wpA, me.getId());
+    assertThat(assigned).isTrue();
+
+    WorkPackageDto shownAfterAssign = client.workPackageShow(wpA);
+    assertThat(shownAfterAssign.getAssigneeId()).isEqualTo(me.getId());
+
+    List<WorkPackageDto> assignedToMe = client.workPackageList(demoProjectId, "me", null);
+    assertThat(assignedToMe).extracting(WorkPackageDto::getId).contains(wpA);
+
+    boolean unassigned = client.workPackageAssign(wpA, null);
+    assertThat(unassigned).isTrue();
+    assertThat(client.workPackageShow(wpA).getAssigneeId()).isNull();
+
+    // --- Change status (pick any status different from the current one)
+    List<StatusDto> statuses = client.statusList();
+    assertThat(statuses).isNotEmpty();
+    Integer currentStatusId = client.workPackageShow(wpA).getStatusId();
+    Integer otherStatusId = statuses.stream()
+        .map(StatusDto::getId)
+        .filter(id -> !id.equals(currentStatusId))
+        .findFirst()
+        .orElseThrow();
+
+    boolean statusChanged = client.workPackageChangeStatus(wpA, otherStatusId);
+    assertThat(statusChanged).isTrue();
+    assertThat(client.workPackageShow(wpA).getStatusId()).isEqualTo(otherStatusId);
+
+    List<WorkPackageDto> filteredByStatus = client.workPackageList(demoProjectId, null,
+        otherStatusId);
+    assertThat(filteredByStatus).extracting(WorkPackageDto::getId).contains(wpA);
 
     // --- Upload attachment
     byte[] content = "hello from integration test".getBytes(StandardCharsets.UTF_8);

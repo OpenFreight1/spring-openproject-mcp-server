@@ -1,5 +1,7 @@
 package de.tklein.tklab.openproject.mcp.tools;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto.OnCreate;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
@@ -38,10 +40,12 @@ public class WorkPackageTools {
   }
 
   @McpTool(
-      description = "Queries the work-packages by projectId.",
+      description = "Queries the work-packages by projectId, optionally filtered by assignee and/or status.",
       annotations = @McpAnnotations(readOnlyHint = true))
-  public List<WorkPackageDto> workPackageList(@NotNull Integer projectId) {
-    return openProjectApiClient.workPackageList(projectId);
+  public List<WorkPackageDto> workPackageList(@NotNull Integer projectId,
+      @JsonPropertyDescription("Optional filter: numerical user id (see 'currentUser'/'workPackageShow'), or the literal string 'me' for the authenticated user's own work packages.") @JsonProperty String assigneeId,
+      @JsonPropertyDescription("Optional filter: numerical status id from MCP tool 'statusList'.") @JsonProperty Integer statusId) {
+    return openProjectApiClient.workPackageList(projectId, assigneeId, statusId);
   }
 
   @McpTool(
@@ -64,6 +68,20 @@ public class WorkPackageTools {
   public boolean workPackageUpdate(@NotNull Integer workPackageId,
       @Valid @NotNull WorkPackageUpdateDto workPackage) {
     return openProjectApiClient.workPackageUpdate(workPackageId, workPackage);
+  }
+
+  @McpTool(
+      description = "Assigns a work package to a user, or unassigns it if userId is omitted/null. Use 'currentUser' to resolve your own id for self-assignment.")
+  public boolean workPackageAssign(@NotNull Integer workPackageId,
+      @JsonPropertyDescription("The numerical user id to assign, or omit/null to unassign.") @JsonProperty Integer userId) {
+    return openProjectApiClient.workPackageAssign(workPackageId, userId);
+  }
+
+  @McpTool(
+      description = "Changes a work package's status. Use 'statusList' to resolve status names to ids.")
+  public boolean workPackageChangeStatus(@NotNull Integer workPackageId,
+      @JsonPropertyDescription("The numerical status id from MCP tool 'statusList'.") @NotNull Integer statusId) {
+    return openProjectApiClient.workPackageChangeStatus(workPackageId, statusId);
   }
 
   @McpTool(
