@@ -236,8 +236,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!--suppress UnresolvedMavenProperty -->
-          <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+          <!-- @{argLine} dropped: no jacoco-maven-plugin binds jacoco:prepare-agent to set
+               that property, so it was passed through to the forked JVM as the literal
+               string "@{argLine}" — java's launcher reads a leading '@' as an argument-file
+               reference, tried to open a file named "{argLine}", and crashed the fork. -->
+          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
         </configuration>
       </plugin>
       <!--      <plugin>-->
