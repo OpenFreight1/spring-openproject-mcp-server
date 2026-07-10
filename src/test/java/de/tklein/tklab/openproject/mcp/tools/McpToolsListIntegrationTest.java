@@ -110,7 +110,10 @@ class McpToolsListIntegrationTest {
         "workPackageUploadAttachment",
         "workPackageWatchers",
         "workPackagesBulkCreate",
-        "workPackagesBulkUpdate"
+        "workPackagesBulkUpdate",
+        "wikiPageShow",
+        "wikiPageAttachments",
+        "wikiPageUploadAttachment"
     );
     List<String> actualToolNames = tools.findValuesAsText("name");
     assertThat(actualToolNames).containsExactlyInAnyOrderElementsOf(expectedToolNames);

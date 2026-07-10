@@ -21,6 +21,7 @@ import de.tklein.tklab.openproject.mcp.dto.UserDto;
 import de.tklein.tklab.openproject.mcp.dto.VersionDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageBulkUpdateItemDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageCreateDto;
+import de.tklein.tklab.openproject.mcp.dto.WikiPageDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageDto;
 import de.tklein.tklab.openproject.mcp.dto.WorkPackageUpdateDto;
 import de.tklein.tklab.openproject.mcp.mapper.AttachmentMapper;
@@ -36,6 +37,7 @@ import de.tklein.tklab.openproject.mcp.mapper.TimeEntryMapper;
 import de.tklein.tklab.openproject.mcp.mapper.TypeMapper;
 import de.tklein.tklab.openproject.mcp.mapper.UserMapper;
 import de.tklein.tklab.openproject.mcp.mapper.VersionMapper;
+import de.tklein.tklab.openproject.mcp.mapper.WikiPageMapper;
 import de.tklein.tklab.openproject.mcp.mapper.WorkPackageMapper;
 import de.tklein.tklab.openproject.mcp.tools.RelationTools.RelationType;
 import de.tklein.tklab.openproject.mcp.util.PatchMap;
@@ -81,6 +83,7 @@ public class OpenProjectApiClient {
   private final GroupMapper groupMapper;
   private final AttachmentMapper attachmentMapper;
   private final ReminderMapper reminderMapper;
+  private final WikiPageMapper wikiPageMapper;
 
   public UserDto root() {
     var result = restOperations.getJson("/api/v3");
@@ -436,6 +439,29 @@ public class OpenProjectApiClient {
   public boolean attachmentDelete(@NotNull Integer attachmentId) {
     restOperations.delete("/api/v3/attachments/{attachmentId}", attachmentId);
     return true;
+  }
+
+  /**
+   * OpenProject's APIv3 only exposes a wiki page's id/title (Wiki_PageModel has no content
+   * field, and there is no PATCH endpoint) — reading/writing the page's actual text is not
+   * possible via the API, only through OpenProject's own UI.
+   */
+  public WikiPageDto wikiPageShow(@Nonnull Integer wikiPageId) {
+    var result = restOperations.getJson("/api/v3/wiki_pages/{wikiPageId}", wikiPageId);
+    return wikiPageMapper.toDto(result);
+  }
+
+  public List<AttachmentDto> wikiPageAttachmentList(@Nonnull Integer wikiPageId) {
+    var result = restOperations.getJson("/api/v3/wiki_pages/{wikiPageId}/attachments", wikiPageId);
+    return restOperations.mapEmbeddedElements(result, attachmentMapper::toDto);
+  }
+
+  public Integer wikiPageUploadAttachment(@Nonnull Integer wikiPageId, String fileName,
+      byte[] fileContent, String fileContentType) {
+    var body = restOperations.buildMultipartAttachmentBody(fileName, fileContent, fileContentType);
+    var result = restOperations.postMultipart("/api/v3/wiki_pages/{wikiPageId}/attachments", body,
+        wikiPageId);
+    return result.findValue("id").asInt();
   }
 
   public VersionDto versionShow(@Nonnull Integer versionId) {
